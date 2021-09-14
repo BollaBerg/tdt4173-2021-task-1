@@ -42,7 +42,7 @@ class LogisticRegression:
             A length m array of floats in the range [0, 1]
             with probability-like predictions
         """
-        sigmoid_inputs = X * self.weights
+        sigmoid_inputs = np.dot(X, self.weights)
         return sigmoid(sigmoid_inputs)
         
 

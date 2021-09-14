@@ -9,7 +9,7 @@ def test_predict_multiplies_weights_correctly():
     reg.weights = np.array([-1, 2])
     predictions = reg.predict(np.array([[1, 2], [3, 4], [11, 22]]))
 
-    actual_predictions = sigmoid(np.array([[-1, 4], [-3, 8], [-11, 44]]))
+    actual_predictions = sigmoid(np.array([-1 + 4, -3 + 8, -11 + 44]))
 
     np.testing.assert_array_equal(
         predictions, actual_predictions,
