@@ -6,10 +6,10 @@ import pandas as pd
 
 class LogisticRegression:
     
-    def __init__(self):
+    def __init__(self, initial_learning_rate=0.01):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
-        pass
+        self.initial_learning_rate = initial_learning_rate
 
         
     def fit(self, X, y):
@@ -23,6 +23,7 @@ class LogisticRegression:
                 m binary 0.0/1.0 labels
         """
         n_samples, n_features = X.shape
+        learning_rate = self.initial_learning_rate
 
         # Initialize random weights
         rng = np.random.default_rng()
