@@ -10,6 +10,7 @@ class LogisticRegression:
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         pass
+
         
     def fit(self, X, y):
         """
@@ -21,8 +22,11 @@ class LogisticRegression:
             y (array<m>): a vector of floats containing 
                 m binary 0.0/1.0 labels
         """
-        # TODO: Implement
-        raise NotImplemented()
+        n_samples, n_features = X.shape
+
+        # Initialize random weights
+        rng = np.random.default_rng()
+        self.weights = rng.random((n_features,))
     
     def predict(self, X):
         """
@@ -38,8 +42,8 @@ class LogisticRegression:
             A length m array of floats in the range [0, 1]
             with probability-like predictions
         """
-        # TODO: Implement
-        raise NotImplemented()
+        sigmoid_inputs = X * self.weights
+        return sigmoid(sigmoid_inputs)
         
 
         
@@ -98,3 +102,7 @@ def sigmoid(x):
     return 1. / (1. + np.exp(-x))
 
         
+if __name__ == '__main__':
+    reg = LogisticRegression()
+    reg.weights = np.array([1, 2])
+    print(reg.predict(np.array([[1, 2], [3, 4], [11, 22]])))
