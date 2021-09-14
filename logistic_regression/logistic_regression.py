@@ -28,6 +28,22 @@ class LogisticRegression:
         # Initialize random weights
         rng = np.random.default_rng()
         self.weights = rng.random((n_features,))
+
+        get_sample = _create_function_get_sample(X)
+
+        for i in range(n_samples):
+            sample = np.array(get_sample(X, i))
+            print(f"SAMPLE: {sample}")
+            predicted_result = self.predict(sample)
+            actual_result = get_sample(y, i)
+
+            for feature in range(len(self.weights)):
+                self.weights[feature] += (
+                    learning_rate
+                    * (actual_result - predicted_result)
+                    * sample[feature]
+                )
+
     
     def predict(self, X):
         """
@@ -46,6 +62,24 @@ class LogisticRegression:
         sigmoid_inputs = np.dot(X, self.weights)
         return sigmoid(sigmoid_inputs)
         
+
+# Own utility functions
+def _create_function_get_sample(X_input):
+    if isinstance(X_input, np.ndarray):
+        def get_sample(X, index):
+            return X[index]
+        return get_sample
+    
+    elif isinstance(X_input, pd.DataFrame):
+        def get_sample(X, index):
+            return X.iloc[index]
+        return get_sample
+    
+    else:
+        raise NotImplementedError(
+            "X_input is not numpy.ndarray or pandas.DataFrame."
+            + "Other lists are not implemented!"
+        )
 
         
 # --- Some utility functions 
