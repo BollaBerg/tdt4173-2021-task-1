@@ -33,7 +33,6 @@ class LogisticRegression:
 
         for i in range(n_samples):
             sample = np.array(get_sample(X, i))
-            print(f"SAMPLE: {sample}")
             predicted_result = self.predict(sample)
             actual_result = get_sample(y, i)
 
