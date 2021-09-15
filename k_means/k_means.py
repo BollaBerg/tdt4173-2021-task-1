@@ -43,7 +43,9 @@ class KMeans:
 
 
             # Update each centroid to be the mean of its points
-            pass
+            for centroid in range(len(centroids)):
+                assigned_points = X[assignments == centroid]
+                centroids[centroid] = np.mean(assigned_points, axis=0)
 
             # Update prev_assignments, to be able to finish early
             prev_assignments = assignments
