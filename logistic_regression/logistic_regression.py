@@ -64,7 +64,7 @@ class LogisticRegression:
         self.weights = rng.random((n_features,))
 
         for _ in range(self.epochs):
-            predicted_results = self.predict(X)
+            predicted_results = sigmoid(np.dot(X, self.weights))
             actual_results = y
 
             # Calculate how much the prediction missed
