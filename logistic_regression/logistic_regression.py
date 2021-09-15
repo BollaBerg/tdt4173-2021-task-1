@@ -45,7 +45,7 @@ class LogisticRegression:
 
         if self.has_intercept:
             n_features += 1
-            add_intercept_column(X)
+            X = add_intercept_column(X)
 
         # Initialize random weights
         rng = np.random.default_rng()
@@ -81,28 +81,44 @@ class LogisticRegression:
             A length m array of floats in the range [0, 1]
             with probability-like predictions
         """
-        if self.has_intercept and not "Intercept" in X.columns:
-            add_intercept_column(X)
+        if self.has_intercept:
+            X = add_intercept_column(X)
 
         sigmoid_inputs = np.dot(X, self.weights)
         return sigmoid(sigmoid_inputs)
         
 
 # Own utility functions
-def add_intercept_column(X : pd.DataFrame):
-    """Insert an Intercept column into X.
+def add_intercept_column(X : pd.DataFrame) -> pd.DataFrame:
+    """Return a DataFrame with values from X and an Intercept column.
 
     This is used when X is supplied as input to either .fit or .predict, if the
     hyperparameter has_intercept is True. If the parameter is True, the 
     prediction from X can have its intercept in a different spot than origo.
 
-    NOTE: Does NOT check whether X already has an Intercept column!
+    If X already is a Pandas DataFrame with a column named "Intercept", then
+    the method simply returns X early.
+
+    If X already is a Pandas DataFrame without a column named "Intercept", then
+    the column is added and the DataFrame is returned.
+
+    If X is not a Pandas DataFrame, the method converts it to a DataFrame,
+    before adding a column named "Intercept" to it.
 
     Args:
         X (pd.DataFrame): Input DataFrame that should get an Intercept column.
+
+    Returns:
+        pd.DataFrame: DataFrame with original data, and an Intercept column.
     """
-    n_samples = X.shape[0]
-    X.insert(0, "Intercept", np.ones((n_samples,)))
+    X_df = pd.DataFrame(X)
+
+    if "Intercept" in X_df.columns:
+        return X_df
+    
+    n_samples = X_df.shape[0]
+    X_df.insert(0, "Intercept", np.ones((n_samples,)))
+    return X_df
         
 # --- Some utility functions 
 
