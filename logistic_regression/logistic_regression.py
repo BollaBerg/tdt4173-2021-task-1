@@ -23,16 +23,14 @@ class LogisticRegression:
             y (array<m>): a vector of floats containing 
                 m binary 0.0/1.0 labels
         """
-        n_samples, n_features = X.shape
+        _, n_features = X.shape
         learning_rate = self.initial_learning_rate
 
         # Initialize random weights
         rng = np.random.default_rng()
         self.weights = rng.random((n_features,))
 
-        get_sample = _create_function_get_sample(X)
-
-        for epoch in range(self.epochs):
+        for _ in range(self.epochs):
             predicted_results = self.predict(X)
             actual_results = y
 
@@ -67,22 +65,6 @@ class LogisticRegression:
         
 
 # Own utility functions
-def _create_function_get_sample(X_input):
-    if isinstance(X_input, np.ndarray):
-        def get_sample(X, index):
-            return X[index]
-        return get_sample
-    
-    elif isinstance(X_input, pd.DataFrame):
-        def get_sample(X, index):
-            return X.iloc[index]
-        return get_sample
-    
-    else:
-        raise NotImplementedError(
-            "X_input is not numpy.ndarray or pandas.DataFrame."
-            + "Other lists are not implemented!"
-        )
 
         
 # --- Some utility functions 
