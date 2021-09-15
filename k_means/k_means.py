@@ -86,8 +86,7 @@ class KMeans:
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
-        # TODO: Implement 
-        raise NotImplementedError()
+        return get_assignments(X, self.centroids)
     
     def get_centroids(self):
         """
