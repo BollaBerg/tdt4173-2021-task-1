@@ -6,11 +6,28 @@ import pandas as pd
 
 class LogisticRegression:
     
-    def __init__(self, initial_learning_rate=0.01, epochs=10000):
+    def __init__(self,
+                initial_learning_rate : float = 0.01,
+                epochs : int = 10000,
+                has_intercept : bool = True):
+        """Initialize an instance of Logistic Regression, with optional
+        hyperparameters.
+
+        Args:
+            initial_learning_rate (float, optional): Learning rate (alpha) the
+                regression should use. Defaults to 0.01.
+            epochs (int, optional): Number of epochs the regression should
+                use to learn. Defaults to 10000.
+            has_intercept (bool, optional): Whether the regression should have
+                a different intercept than (0,0). If False, there is no 0-th 
+                weight, meaning that the 50/50 split will go through origo.
+                Defaults to True.
+        """
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         self.initial_learning_rate = initial_learning_rate
         self.epochs = epochs
+        self.has_intercept = has_intercept
 
         
     def fit(self, X, y):
@@ -25,6 +42,10 @@ class LogisticRegression:
         """
         _, n_features = X.shape
         learning_rate = self.initial_learning_rate
+
+        if self.has_intercept:
+            n_features += 1
+            add_intercept_column(X)
 
         # Initialize random weights
         rng = np.random.default_rng()
@@ -60,12 +81,28 @@ class LogisticRegression:
             A length m array of floats in the range [0, 1]
             with probability-like predictions
         """
+        if self.has_intercept and not "Intercept" in X.columns:
+            add_intercept_column(X)
+
         sigmoid_inputs = np.dot(X, self.weights)
         return sigmoid(sigmoid_inputs)
         
 
 # Own utility functions
+def add_intercept_column(X : pd.DataFrame):
+    """Insert an Intercept column into X.
 
+    This is used when X is supplied as input to either .fit or .predict, if the
+    hyperparameter has_intercept is True. If the parameter is True, the 
+    prediction from X can have its intercept in a different spot than origo.
+
+    NOTE: Does NOT check whether X already has an Intercept column!
+
+    Args:
+        X (pd.DataFrame): Input DataFrame that should get an Intercept column.
+    """
+    n_samples = X.shape[0]
+    X.insert(0, "Intercept", np.ones((n_samples,)))
         
 # --- Some utility functions 
 
