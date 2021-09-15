@@ -6,10 +6,11 @@ import pandas as pd
 
 class LogisticRegression:
     
-    def __init__(self, initial_learning_rate=0.01):
+    def __init__(self, initial_learning_rate=0.01, epochs=10000):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         self.initial_learning_rate = initial_learning_rate
+        self.epochs = epochs
 
         
     def fit(self, X, y):
@@ -31,17 +32,20 @@ class LogisticRegression:
 
         get_sample = _create_function_get_sample(X)
 
-        for i in range(n_samples):
-            sample = np.array(get_sample(X, i))
-            predicted_result = self.predict(sample)
-            actual_result = get_sample(y, i)
+        for epoch in range(self.epochs):
+            predicted_results = self.predict(X)
+            actual_results = y
 
-            # Update weights
-            self.weights += (
-                learning_rate
-                * (actual_result - predicted_result)
-                * sample
+            # Calculate how much the prediction missed
+            prediction_difference = actual_results - predicted_results
+
+            # Calculate how much to change the weights
+            delta_weights = learning_rate * np.dot(
+                prediction_difference, X
             )
+
+            # Update the weights
+            self.weights += delta_weights
 
     
     def predict(self, X):
@@ -137,6 +141,16 @@ def sigmoid(x):
 
         
 if __name__ == '__main__':
-    reg = LogisticRegression()
-    reg.weights = np.array([1, 2])
-    print(reg.predict(np.array([[1, 2], [3, 4], [11, 22]])))
+    # Partition data into independent (feature) and depended (target) variables
+    data_1 = pd.read_csv('/mnt/c/Users/andre/Documents/Skole/Skole 21.2 Høst/TDT4173 Maskinlæring/tdt4173-2021-task-1/logistic_regression/data_1.csv')
+    X = data_1[['x0', 'x1']]
+    y = data_1['y']
+
+    # Create and train model.
+    model_1 = LogisticRegression() # <-- Should work with default constructor  
+    model_1.fit(X, y)
+
+    # Calculate accuracy and cross entropy for (insample) predictions 
+    y_pred = model_1.predict(X)
+    print(f'Accuracy: {binary_accuracy(y_true=y, y_pred=y_pred, threshold=0.5) :.3f}')
+    print(f'Cross Entropy: {binary_cross_entropy(y_true=y, y_pred=y_pred) :.3f}')
