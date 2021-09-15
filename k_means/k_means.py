@@ -6,11 +6,13 @@ import pandas as pd
 
 class KMeans:
     
-    def __init__(self, number_of_clusters : int = 2, epochs : int = 1000):
+    def __init__(self,
+                number_of_clusters : int = 2,
+                max_iterations : int = 1):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         self.number_of_clusters = number_of_clusters
-        self.epochs = epochs
+        self.max_iterations = max_iterations
         
     def fit(self, X):
         """
@@ -20,11 +22,32 @@ class KMeans:
             X (array<m,n>): a matrix of floats with
                 m rows (#samples) and n columns (#features)
         """
+        X_np = np.array(X)  # To be sure we are always working with same type
         n_samples, n_features = X.shape
 
         # Initialize random centroids
         rng = np.random.default_rng()
-        self.centroids = rng.random((self.number_of_clusters, n_features))
+        centroids = rng.random((self.number_of_clusters, n_features))
+
+        # Initialize assignments, in order to finish early if it doesn't change
+        prev_assignments = np.empty(0)
+
+        for _ in range(self.max_iterations):
+            # Get closest centroid for each point
+            assignments = get_assignments(X, centroids)
+
+            if np.array_equal(assignments, prev_assignments):
+                print("Finished early: No change in centroid assignment")
+                self.centroids = centroids
+                return
+
+
+            # Update each centroid to be the mean of its points
+            pass
+
+            # Update prev_assignments, to be able to finish early
+            prev_assignments = assignments
+
     
     def predict(self, X):
         """
@@ -35,10 +58,10 @@ class KMeans:
         Args:
             X (array<m,n>): a matrix of floats with 
                 m rows (#samples) and n columns (#features)
-            
+
         Returns:
             A length m integer array with cluster assignments
-            for each point. E.g., if X is a 10xn matrix and 
+            for each point. E.g., if X is a 10xn matrix and
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
@@ -63,7 +86,22 @@ class KMeans:
         # TODO: Implement 
         raise NotImplementedError()
     
-    
+
+### Own utility functions ###
+def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
+    """Get closest centroid for each point in X.
+
+    Args:
+        X (np.ndarray): Points in the dataset which will get assigned one 
+            (closest) centroid each.
+        centroids (np.ndarray): Centroids to get the closest centroid from.
+
+    Returns:
+        np.ndarray: 1D-array with length = number of datapoints, where each
+            value is the index of datapoint[i]'s closest centroid
+    """
+    distances = cross_euclidean_distance(X, centroids)
+    return np.argmin(distances, axis=1)
     
     
 # --- Some utility functions 
