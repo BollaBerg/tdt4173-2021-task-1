@@ -3,13 +3,16 @@ import pandas as pd
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
 
+from typing import Callable
+
 
 class LogisticRegression:
     
     def __init__(self,
                 initial_learning_rate : float = 0.01,
                 epochs : int = 10000,
-                has_intercept : bool = True):
+                has_intercept : bool = True,
+                preprocessing : Callable[[pd.DataFrame], pd.DataFrame] = None):
         """Initialize an instance of Logistic Regression, with optional
         hyperparameters.
 
@@ -22,12 +25,18 @@ class LogisticRegression:
                 a different intercept than (0,0). If False, there is no 0-th 
                 weight, meaning that the 50/50 split will go through origo.
                 Defaults to True.
+            preprocessing (Callable[(pd.DataFrame) -> pd.DataFrame], optional):
+                Preprocessing function to apply to the data before running
+                logistic regression on it. Will be applied to input data for
+                both .fit and .predict. If None, no preprocessing will be done
+                to the data. Defaults to None.
         """
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
         self.initial_learning_rate = initial_learning_rate
         self.epochs = epochs
         self.has_intercept = has_intercept
+        self.preprocessing = preprocessing
 
         
     def fit(self, X, y):
@@ -42,6 +51,9 @@ class LogisticRegression:
         """
         _, n_features = X.shape
         learning_rate = self.initial_learning_rate
+
+        if self.preprocessing is not None:
+            X = self.preprocessing(X)
 
         if self.has_intercept:
             n_features += 1
@@ -81,6 +93,9 @@ class LogisticRegression:
             A length m array of floats in the range [0, 1]
             with probability-like predictions
         """
+        if self.preprocessing is not None:
+            X = self.preprocessing(X)
+
         if self.has_intercept:
             X = add_intercept_column(X)
 
