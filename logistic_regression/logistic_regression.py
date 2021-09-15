@@ -36,12 +36,12 @@ class LogisticRegression:
             predicted_result = self.predict(sample)
             actual_result = get_sample(y, i)
 
-            for feature in range(len(self.weights)):
-                self.weights[feature] += (
-                    learning_rate
-                    * (actual_result - predicted_result)
-                    * sample[feature]
-                )
+            # Update weights
+            self.weights += (
+                learning_rate
+                * (actual_result - predicted_result)
+                * sample
+            )
 
     
     def predict(self, X):
