@@ -6,10 +6,11 @@ import pandas as pd
 
 class KMeans:
     
-    def __init__(self):
+    def __init__(self, number_of_clusters : int = 2, epochs : int = 1000):
         # NOTE: Feel free add any hyperparameters 
         # (with defaults) as you see fit
-        pass
+        self.number_of_clusters = number_of_clusters
+        self.epochs = epochs
         
     def fit(self, X):
         """
@@ -19,8 +20,11 @@ class KMeans:
             X (array<m,n>): a matrix of floats with
                 m rows (#samples) and n columns (#features)
         """
-        # TODO: Implement
-        raise NotImplementedError()
+        n_samples, n_features = X.shape
+
+        # Initialize random centroids
+        rng = np.random.default_rng()
+        self.centroids = rng.random((self.number_of_clusters, n_features))
     
     def predict(self, X):
         """
