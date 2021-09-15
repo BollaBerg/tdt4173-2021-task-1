@@ -205,3 +205,8 @@ def euclidean_silhouette(X, z):
     b = (D + inf_mask).min(axis=1)
     
     return np.mean((b - a) / np.maximum(a, b))
+
+
+if __name__ == '__main__':
+    kmeans = KMeans()
+    kmeans.fit(np.array([[0, 0], [0, 1], [3, 2], [3, 3]]))
