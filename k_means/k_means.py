@@ -61,7 +61,9 @@ class KMeans:
         # Initialize centroids
         if self.initial_centroids is None:
             rng = np.random.default_rng()
-            centroids = rng.random((self.number_of_clusters, n_features))
+            centroids = rng.choice(
+                X_np, size=self.number_of_clusters, replace=False
+            )
         else:
             centroids = np.array(self.initial_centroids)
 
