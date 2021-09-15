@@ -51,7 +51,7 @@ class KMeans:
 
         for _ in range(self.max_iterations):
             # Get closest centroid for each point
-            assignments = get_assignments(X, centroids)
+            assignments = get_assignments(X_np, centroids)
 
             if np.array_equal(assignments, prev_assignments):
                 print("Finished early: No change in centroid assignment")
@@ -61,7 +61,7 @@ class KMeans:
 
             # Update each centroid to be the mean of its points
             for centroid in range(len(centroids)):
-                assigned_points = X[assignments == centroid]
+                assigned_points = X_np[assignments == centroid]
                 centroids[centroid] = np.mean(assigned_points, axis=0)
 
             # Update prev_assignments, to be able to finish early
@@ -119,6 +119,9 @@ def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
         np.ndarray: 1D-array with length = number of datapoints, where each
             value is the index of datapoint[i]'s closest centroid
     """
+    if not isinstance(X, np.ndarray):
+        X = np.array(X)
+    
     distances = cross_euclidean_distance(X, centroids)
     return np.argmin(distances, axis=1)
     
