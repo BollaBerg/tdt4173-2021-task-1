@@ -1,6 +1,6 @@
 import numpy as np
 
-from k_means import KMeans
+from k_means import KMeans, preprocessing_normalize
 
 def test_KMeans_computes_centroids_correctly():
     """Test that KMeans computes centroids correctly
@@ -16,3 +16,13 @@ def test_KMeans_computes_centroids_correctly():
     precomputed_centroids = np.array([[0, 0.5], [4.5, 5]])
 
     np.testing.assert_array_equal(kmeans.centroids, precomputed_centroids)
+
+
+def test_preprocessing_normalize():
+    """Test that the preprocessing_normalize function works correctly"""
+    input_values = np.array([[0, 0.1], [0.2, 5.0], [-0.2, 5.0]])
+    output_values = preprocessing_normalize(input_values, floor=0.0, roof=1.0)
+
+    expected_output_values = np.array([[0.5, 0], [1, 1], [0, 1]])
+
+    np.testing.assert_array_equal(output_values, expected_output_values)

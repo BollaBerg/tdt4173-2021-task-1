@@ -1,4 +1,5 @@
-import numpy as np 
+import numpy as np
+from numpy.lib.arraysetops import isin 
 import pandas as pd 
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
@@ -141,7 +142,39 @@ def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
     
     distances = cross_euclidean_distance(X, centroids)
     return np.argmin(distances, axis=1)
+
+
+def preprocessing_normalize(
+        X : np.ndarray,
+        floor : float = 0.0,
+        roof : float = 1.0) -> np.ndarray:
+    """Normalize data in X, to be between floor and roof on both axes
+
+    Args:
+        X (np.ndarray): Array of data. If not of type np.ndarray, it will be
+            converted to an np.ndarray.
+        floor (float, optional): Min value for the dataset. Defaults to 0.0.
+        roof (float, optional): Max value for the dataset. Defaults to 1.0.
+
+    Returns:
+        np.ndarray: Array with normalized data from X
+    """
+    if not isinstance(X, np.ndarray):
+        X = np.array(X)
     
+    max_ = np.max(X, axis=0)
+    min_ = np.min(X, axis=0)
+    diff = (max_ - min_) / roof
+
+    for column in range(X.shape[1]):
+        # Make the column be in [floor, ...)
+        X[:, column] -= min_[column] + floor
+        
+        # Make the column be in [floor, roof]
+        X[:, column] /= diff[column]
+    
+    return X
+
     
 # --- Some utility functions 
 
