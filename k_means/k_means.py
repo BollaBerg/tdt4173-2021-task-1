@@ -8,11 +8,25 @@ class KMeans:
     
     def __init__(self,
                 number_of_clusters : int = 2,
-                max_iterations : int = 1):
-        # NOTE: Feel free add any hyperparameters 
-        # (with defaults) as you see fit
+                max_iterations : int = 10000,
+                initial_centroids : np.ndarray = None):
+        """Create an instance of the KMeans algorithm, with hyperparameters.
+
+        Args:
+            number_of_clusters (int, optional): The number of clusters to find
+                centroids for. Defaults to 2.
+            max_iterations (int, optional): Maximum number of iterations the
+                algorithm should use. If the algorithm doesn't converge until
+                max_iterations has been reached, then it uses the centroids
+                it found. Defaults to 10000.
+            initial_centroids (np.ndarray, optional): Initial centroids to use
+                when initializing the algorithm. Used primarily / only for
+                debugging. If None, random initial centroids will be computed
+                when .fit is called. Defaults to None.
+        """
         self.number_of_clusters = number_of_clusters
         self.max_iterations = max_iterations
+        self.initial_centroids = initial_centroids
         
     def fit(self, X):
         """
@@ -25,9 +39,12 @@ class KMeans:
         X_np = np.array(X)  # To be sure we are always working with same type
         n_samples, n_features = X.shape
 
-        # Initialize random centroids
-        rng = np.random.default_rng()
-        centroids = rng.random((self.number_of_clusters, n_features))
+        # Initialize centroids
+        if self.initial_centroids is None:
+            rng = np.random.default_rng()
+            centroids = rng.random((self.number_of_clusters, n_features))
+        else:
+            centroids = np.array(self.initial_centroids)
 
         # Initialize assignments, in order to finish early if it doesn't change
         prev_assignments = np.empty(0)
@@ -49,6 +66,8 @@ class KMeans:
 
             # Update prev_assignments, to be able to finish early
             prev_assignments = assignments
+        
+        self.centroids = centroids
 
     
     def predict(self, X):
