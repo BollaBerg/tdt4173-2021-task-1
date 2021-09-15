@@ -49,12 +49,15 @@ class KMeans:
         # Initialize assignments, in order to finish early if it doesn't change
         prev_assignments = np.empty(0)
 
-        for _ in range(self.max_iterations):
+        for epoch in range(self.max_iterations):
             # Get closest centroid for each point
             assignments = get_assignments(X_np, centroids)
 
             if np.array_equal(assignments, prev_assignments):
-                print("Finished early: No change in centroid assignment")
+                print(
+                    f"Finished early (epoch {epoch}): "
+                    + "No change in centroid assignment"
+                )
                 self.centroids = centroids
                 return
 
