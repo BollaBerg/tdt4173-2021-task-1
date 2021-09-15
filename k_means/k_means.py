@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
+from typing import Callable
 
 
 class KMeans:
@@ -9,7 +10,8 @@ class KMeans:
     def __init__(self,
                 number_of_clusters : int = 2,
                 max_iterations : int = 10000,
-                initial_centroids : np.ndarray = None):
+                initial_centroids : np.ndarray = None,
+                preprocessing : Callable[[np.ndarray], np.ndarray] = None):
         """Create an instance of the KMeans algorithm, with hyperparameters.
 
         Args:
@@ -23,10 +25,15 @@ class KMeans:
                 when initializing the algorithm. Used primarily / only for
                 debugging. If None, random initial centroids will be computed
                 when .fit is called. Defaults to None.
+            preprocessing (Callable[(np.ndarray) -> np.ndarray], optional):
+                Function that will be applied to X (input to .fit and .predict)
+                before running the algorithm. If None, no preprocessing will be
+                applied. Defaults to None.
         """
         self.number_of_clusters = number_of_clusters
         self.max_iterations = max_iterations
         self.initial_centroids = initial_centroids
+        self.preprocessing = preprocessing
         
     def fit(self, X):
         """
@@ -37,6 +44,11 @@ class KMeans:
                 m rows (#samples) and n columns (#features)
         """
         X_np = np.array(X)  # To be sure we are always working with same type
+
+        # Apply preprocessing
+        if self.preprocessing is not None:
+            X_np = self.preprocessing(X_np)
+
         n_samples, n_features = X.shape
 
         # Initialize centroids
@@ -89,6 +101,8 @@ class KMeans:
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
+        if self.preprocessing is not None:
+            X = self.preprocessing(X)
         return get_assignments(X, self.centroids)
     
     def get_centroids(self):
