@@ -134,7 +134,42 @@ def add_intercept_column(X : pd.DataFrame) -> pd.DataFrame:
     n_samples = X_df.shape[0]
     X_df.insert(0, "Intercept", np.ones((n_samples,)))
     return X_df
-        
+
+
+def cartesian_to_polar_coordinates(x : np.ndarray, y : np.ndarray) -> np.ndarray:
+    """Convert cartesian coordinates to polar coordinates
+
+    Args:
+        x (np.ndarray): Array of distances along x-axis
+        y (np.ndarray): Array of distances along y-axis
+
+    Returns:
+        np.ndarray: Distances from origo
+        np.ndarray: Angles from x-axis
+    """
+    distance_from_origo = np.sqrt(x**2 + y**2)
+    angle = np.arctan2(y, x)
+    return distance_from_origo, angle
+
+
+def preprocessing_cartesian_to_polar_coordinates(X : pd.DataFrame) -> pd.DataFrame:
+    """Preprocessing step to convert a DataFrame of cartesian (x,y)-coordinates
+    to a DataFrame of polar coordinates
+
+    NOTE: Assumes that X has columns 'x0' and 'x1', which will be used as 
+    cartesian coordinates (x, y).
+
+    Args:
+        X (pd.DataFrame): Input DataFrame with cartesian coordinates: (x0, x1).
+            IMPORTANT: MUST CONTAIN COLUMNS 'x0' and 'x1'!
+
+    Returns:
+        pd.DataFrame: DataFrame with polar coordinates: (distance, angle)
+    """
+    distances, angles = cartesian_to_polar_coordinates(X['x0'], X['x1'])
+    return pd.DataFrame({"Distances": distances, "Angles": angles})
+
+
 # --- Some utility functions 
 
 def binary_accuracy(y_true, y_pred, threshold=0.5):
