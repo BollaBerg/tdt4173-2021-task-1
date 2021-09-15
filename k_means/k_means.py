@@ -3,7 +3,6 @@ from numpy.lib.arraysetops import isin
 import pandas as pd 
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
-from typing import Callable
 
 
 class KMeans:
@@ -12,7 +11,7 @@ class KMeans:
                 number_of_clusters : int = 2,
                 max_iterations : int = 10000,
                 initial_centroids : np.ndarray = None,
-                preprocessing : Callable[[np.ndarray], np.ndarray] = None):
+                Processing = None):
         """Create an instance of the KMeans algorithm, with hyperparameters.
 
         Args:
@@ -26,15 +25,22 @@ class KMeans:
                 when initializing the algorithm. Used primarily / only for
                 debugging. If None, random initial centroids will be computed
                 when .fit is called. Defaults to None.
-            preprocessing (Callable[(np.ndarray) -> np.ndarray], optional):
-                Function that will be applied to X (input to .fit and .predict)
-                before running the algorithm. If None, no preprocessing will be
+            Processing (Class, optional): Processing class that MUST have
+                two functions - processing.preprocess (which preprocesses the
+                data) and processing.unprocess (which undoes the processing
+                done earlier, to get the correct centroids out after!)
+                preprocessing will be applied to X (input to .fit and .predict)
+                before running the algorithm. If None, no processing will be
                 applied. Defaults to None.
         """
         self.number_of_clusters = number_of_clusters
         self.max_iterations = max_iterations
         self.initial_centroids = initial_centroids
-        self.preprocessing = preprocessing
+        
+        if Processing is None:
+            self.Processing = None
+        else:
+            self.Processing = Processing()
         
     def fit(self, X):
         """
@@ -47,8 +53,8 @@ class KMeans:
         X_np = np.array(X)  # To be sure we are always working with same type
 
         # Apply preprocessing
-        if self.preprocessing is not None:
-            X_np = self.preprocessing(X_np)
+        if self.Processing is not None:
+            X_np = self.Processing.preprocess(X_np)
 
         n_samples, n_features = X.shape
 
@@ -102,8 +108,8 @@ class KMeans:
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
-        if self.preprocessing is not None:
-            X = self.preprocessing(X)
+        if self.Processing is not None:
+            X = self.Processing.preprocess(X)
         return get_assignments(X, self.centroids)
     
     def get_centroids(self):
@@ -121,6 +127,9 @@ class KMeans:
             [xm_1, xm_2, ..., xm_n]
         ])
         """
+        if self.Processing is not None:
+            return self.Processing.unprocess(self.centroids)
+
         return self.centroids
     
 
@@ -144,36 +153,60 @@ def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
     return np.argmin(distances, axis=1)
 
 
-def preprocessing_normalize(
-        X : np.ndarray,
-        floor : float = 0.0,
-        roof : float = 1.0) -> np.ndarray:
-    """Normalize data in X, to be between floor and roof on both axes
+class ProcessingNormalize:
+    def preprocess(
+            self,
+            X : np.ndarray,
+            floor : float = 0.0,
+            roof : float = 1.0) -> np.ndarray:
+        """Normalize data in X, to be between floor and roof on both axes
 
-    Args:
-        X (np.ndarray): Array of data. If not of type np.ndarray, it will be
-            converted to an np.ndarray.
-        floor (float, optional): Min value for the dataset. Defaults to 0.0.
-        roof (float, optional): Max value for the dataset. Defaults to 1.0.
+        Args:
+            X (np.ndarray): Array of data. If not of type np.ndarray, it will be
+                converted to an np.ndarray.
+            floor (float, optional): Min value for the dataset. Defaults to 0.0.
+            roof (float, optional): Max value for the dataset. Defaults to 1.0.
 
-    Returns:
-        np.ndarray: Array with normalized data from X
-    """
-    if not isinstance(X, np.ndarray):
-        X = np.array(X)
-    
-    max_ = np.max(X, axis=0)
-    min_ = np.min(X, axis=0)
-    diff = (max_ - min_) / roof
-
-    for column in range(X.shape[1]):
-        # Make the column be in [floor, ...)
-        X[:, column] -= min_[column] + floor
+        Returns:
+            np.ndarray: Array with normalized data from X
+        """
+        if not isinstance(X, np.ndarray):
+            X = np.array(X)
         
-        # Make the column be in [floor, roof]
-        X[:, column] /= diff[column]
+        max_ = np.max(X, axis=0)
+        self.prev_max = max_
+        min_ = np.min(X, axis=0) - floor
+        self.prev_min = min_
+
+        diff = (max_ - min_) / roof
+        self.prev_diff = diff
+
+        for column in range(X.shape[1]):
+            # Make the column be in [floor, ...)
+            X[:, column] -= min_[column]
+
+            # Make the column be in [floor, roof]
+            X[:, column] /= diff[column]
+        
+        return X
     
-    return X
+    def unprocess(self, centroids : np.ndarray) -> np.ndarray:
+        """Undo preprocessing from centroids, to get the original centroids
+
+        Args:
+            centroids (np.ndarray): Array of computed (processed) centroids
+
+        Returns:
+            np.ndarray: Array of unprocessed centroids
+        """
+        for column in range(centroids.shape[1]):
+            # Make column be in [floor, ...)
+            centroids[:, column] *= self.prev_diff[column]
+
+            # Make column be in original [floor, roof]
+            centroids[:, column] += self.prev_min[column]
+        
+        return centroids
 
     
 # --- Some utility functions 
