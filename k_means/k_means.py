@@ -186,19 +186,26 @@ def k_means_plusplus(X : np.ndarray, number_of_centroids : int) -> np.ndarray:
     """
     if not isinstance(X, np.ndarray):
         X = np.array(X)
+
+    n_samples, n_features = X.shape
     
     # Choose one random center from the datapoints
     rng = np.random.default_rng()
-    centroids = np.array(rng.sample(X))
+    centroids = np.empty((number_of_centroids, n_features))
+    centroids[0] = rng.choice(X)
 
     # Select rest of centroids randomly, with weights = distance from closest
     # already selected centroid
     for i in range(1, number_of_centroids):
-        distances = cross_euclidean_distance(X, centroids)
-        closest_distances = np.min(distances, axis=0)
+        distances = cross_euclidean_distance(X, centroids[0:i])
 
-        new_centroid = random.choices(X, weights=closest_distances)
-        centroids.append(new_centroid)
+        closest_distances = np.min(distances, axis=1)
+        
+        # rng.choice demands probabilities that sum to 1
+        probabilities = closest_distances/closest_distances.sum()
+
+        new_centroid = rng.choice(X, p=probabilities, axis=0)
+        centroids[i] = new_centroid
     
     return centroids
 
