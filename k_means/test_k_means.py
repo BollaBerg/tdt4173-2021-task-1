@@ -15,7 +15,9 @@ def test_KMeans_computes_centroids_correctly():
 
     precomputed_centroids = np.array([[0, 0.5], [4.5, 5]])
 
-    np.testing.assert_array_equal(kmeans.centroids, precomputed_centroids)
+    np.testing.assert_array_equal(
+        kmeans.get_centroids(), precomputed_centroids
+    )
 
 
 def test_preprocessing_normalize():

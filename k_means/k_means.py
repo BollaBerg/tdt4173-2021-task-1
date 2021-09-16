@@ -4,7 +4,7 @@ import pandas as pd
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
 import random
-from typing import Union
+from typing import Union, Iterable
 
 
 class KMeans:
@@ -44,19 +44,22 @@ class KMeans:
         self.number_of_clusters = number_of_clusters
         self.max_iterations = max_iterations
 
-        if isinstance(initial_centroids, np.ndarray):
+        if (isinstance(initial_centroids, Iterable)
+            and not isinstance(initial_centroids, str)
+        ):
             def get_supplied_centroids(
                     X : np.ndarray,
                     number_of_centroids : int) -> np.ndarray:
                 return np.array(initial_centroids)
-            self.get_centroids = get_supplied_centroids
+            self.get_initial_centroids = get_supplied_centroids
 
         elif initial_centroids in ("kmeans++", "k-means++", "k-means ++"):
-            self.get_centroids = k_means_plusplus
+            self.get_initial_centroids = k_means_plusplus
 
         else:
-            self.get_centroids = random_centroids
+            self.get_initial_centroids = random_centroids
         
+
         if Processing is None:
             self.Processing = None
         else:
@@ -77,7 +80,7 @@ class KMeans:
             X_np = self.Processing.preprocess(X_np)
 
         # Initialize centroids
-        centroids = self.get_centroids(X, self.number_of_clusters)
+        centroids = self.get_initial_centroids(X, self.number_of_clusters)
 
         # Initialize assignments, in order to finish early if it doesn't change
         prev_assignments = np.empty(0)
@@ -223,8 +226,8 @@ def random_centroids(X : np.ndarray, number_of_centroids : int) -> np.ndarray:
 #### Pre- and postprocessing ####
 class ProcessingNormalize:
     def __init__(self):
-        self.prev_max = None
-        self.prev_min = None
+        self.max_ = None
+        self.min_ = None
         self.diff = None
 
     def preprocess(
@@ -246,23 +249,23 @@ class ProcessingNormalize:
         if not isinstance(X, np.ndarray):
             X = np.array(X)
         
-        if self.prev_max is None:
+        if self.max_ is None:
             max_ = np.max(X, axis=0)
-            self.prev_max = max_
+            self.max_ = max_
         else:
-            max_ = self.prev_max
+            max_ = self.max_
         
-        if self.prev_min is None:
+        if self.min_ is None:
             min_ = np.min(X, axis=0) - floor
-            self.prev_min = min_
+            self.min_ = min_
         else:
-            min_ = self.prev_min
+            min_ = self.min_
 
-        if self.prev_diff is None:
+        if self.diff is None:
             diff = (max_ - min_) / roof
-            self.prev_diff = diff
+            self.diff = diff
         else:
-            diff = self.prev_diff
+            diff = self.diff
 
         for column in range(X.shape[1]):
             # Make the column be in [floor, ...)
@@ -284,10 +287,10 @@ class ProcessingNormalize:
         """
         for column in range(centroids.shape[1]):
             # Make column be in [floor, ...)
-            centroids[:, column] *= self.prev_diff[column]
+            centroids[:, column] *= self.diff[column]
 
             # Make column be in [original floor, original roof]
-            centroids[:, column] += self.prev_min[column]
+            centroids[:, column] += self.min_[column]
         
         return centroids
 
