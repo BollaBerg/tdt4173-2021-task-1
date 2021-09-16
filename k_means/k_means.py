@@ -73,14 +73,15 @@ class KMeans:
             X (array<m,n>): a matrix of floats with
                 m rows (#samples) and n columns (#features)
         """
-        X_np = np.array(X)  # To be sure we are always working with same type
+        # To be sure we are always working with same type
+        X_np = np.array(X).astype(np.float)
 
         # Apply preprocessing
         if self.Processing is not None:
             X_np = self.Processing.preprocess(X_np)
 
         # Initialize centroids
-        centroids = self.get_initial_centroids(X, self.number_of_clusters)
+        centroids = self.get_initial_centroids(X_np, self.number_of_clusters)
 
         # Initialize assignments, in order to finish early if it doesn't change
         prev_assignments = np.empty(0)
@@ -125,9 +126,10 @@ class KMeans:
             there are 3 clusters, then a possible assignment
             could be: array([2, 0, 0, 1, 2, 1, 1, 0, 2, 2])
         """
+        X_np = np.array(X)
         if self.Processing is not None:
-            X = self.Processing.preprocess(X)
-        return get_assignments(X, self.centroids)
+            X_np = self.Processing.preprocess(X_np)
+        return get_assignments(X_np, self.centroids)
     
     def get_centroids(self):
         """
