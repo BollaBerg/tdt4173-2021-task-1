@@ -3,6 +3,8 @@ from numpy.lib.arraysetops import isin
 import pandas as pd 
 # IMPORTANT: DO NOT USE ANY OTHER 3RD PARTY PACKAGES
 # (math, random, collections, functools, etc. are perfectly fine)
+import random
+from typing import Union
 
 
 class KMeans:
@@ -10,7 +12,7 @@ class KMeans:
     def __init__(self,
                 number_of_clusters : int = 2,
                 max_iterations : int = 10000,
-                initial_centroids : np.ndarray = None,
+                initial_centroids : Union[np.ndarray, str] = "random",
                 Processing = None):
         """Create an instance of the KMeans algorithm, with hyperparameters.
 
@@ -21,10 +23,16 @@ class KMeans:
                 algorithm should use. If the algorithm doesn't converge until
                 max_iterations has been reached, then it uses the centroids
                 it found. Defaults to 10000.
-            initial_centroids (np.ndarray, optional): Initial centroids to use
-                when initializing the algorithm. Used primarily / only for
-                debugging. If None, random initial centroids will be computed
-                when .fit is called. Defaults to None.
+            initial_centroids (np.ndarray | "kmeans++" | "random", optional):
+                Method used for selecting initial centroids.
+                If initial_centroids is np.ndarray -> initial_centroids will be
+                    used as initial centroids in the algorithm (mostly used for
+                    debugging).
+                If initial_centroids == "kmeans++" -> Initial centroids will be
+                    computed using the k-means++ algorithm.
+                If initial_centroids == "random" or anything other than the 
+                    above options -> Initial centroids will be randomly 
+                    selected from the dataset.
             Processing (Class, optional): Processing class that MUST have
                 two functions - processing.preprocess (which preprocesses the
                 data) and processing.unprocess (which undoes the processing
@@ -35,7 +43,19 @@ class KMeans:
         """
         self.number_of_clusters = number_of_clusters
         self.max_iterations = max_iterations
-        self.initial_centroids = initial_centroids
+
+        if isinstance(initial_centroids, np.ndarray):
+            def get_supplied_centroids(
+                    X : np.ndarray,
+                    number_of_centroids : int) -> np.ndarray:
+                return np.array(initial_centroids)
+            self.get_centroids = get_supplied_centroids
+
+        elif initial_centroids in ("kmeans++", "k-means++", "k-means ++"):
+            self.get_centroids = k_means_plusplus
+
+        else:
+            self.get_centroids = random_centroids
         
         if Processing is None:
             self.Processing = None
@@ -56,16 +76,8 @@ class KMeans:
         if self.Processing is not None:
             X_np = self.Processing.preprocess(X_np)
 
-        n_samples, n_features = X.shape
-
         # Initialize centroids
-        if self.initial_centroids is None:
-            rng = np.random.default_rng()
-            centroids = rng.choice(
-                X_np, size=self.number_of_clusters, replace=False
-            )
-        else:
-            centroids = np.array(self.initial_centroids)
+        centroids = self.get_centroids(X, self.number_of_clusters)
 
         # Initialize assignments, in order to finish early if it doesn't change
         prev_assignments = np.empty(0)
@@ -155,6 +167,60 @@ def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
     return np.argmin(distances, axis=1)
 
 
+#### Initialization functions ####
+def k_means_plusplus(X : np.ndarray, number_of_centroids : int) -> np.ndarray:
+    """Compute centroids using the K-means++ algorithm.
+
+    For more info about K-means++, see 
+        https://en.wikipedia.org/wiki/K-means%2B%2B
+
+    Args:
+        X (np.ndarray): Array of datapoints to get clusters for
+        number_of_centroids (int): Number of centroids to compute
+
+    Returns:
+        np.ndarray: 2D array with number_of_centroids centroids.
+    """
+    if not isinstance(X, np.ndarray):
+        X = np.array(X)
+    
+    # Choose one random center from the datapoints
+    rng = np.random.default_rng()
+    centroids = np.array(rng.sample(X))
+
+    # Select rest of centroids randomly, with weights = distance from closest
+    # already selected centroid
+    for i in range(1, number_of_centroids):
+        distances = cross_euclidean_distance(X, centroids)
+        closest_distances = np.min(distances, axis=0)
+
+        new_centroid = random.choices(X, weights=closest_distances)
+        centroids.append(new_centroid)
+    
+    return centroids
+
+
+def random_centroids(X : np.ndarray, number_of_centroids : int) -> np.ndarray:
+    """Select random datapoints to use as centroids.
+
+    A more random, but faster, way of selecting centroids than k-means++
+
+    Args:
+        X (np.ndarray): Array of datapoints to get clusters for
+        number_of_centroids (int): Number of centroids to compute
+
+    Returns:
+        np.ndarray: 2D array with number_of_centroids centroids.
+    """
+    rng = np.random.default_rng()
+    centroids = rng.choice(
+        X, size=number_of_centroids, replace=False
+    )
+    return centroids
+
+
+
+#### Pre- and postprocessing ####
 class ProcessingNormalize:
     def __init__(self):
         self.prev_max = None
