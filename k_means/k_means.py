@@ -156,6 +156,11 @@ def get_assignments(X : np.ndarray, centroids : np.ndarray) -> np.ndarray:
 
 
 class ProcessingNormalize:
+    def __init__(self):
+        self.prev_max = None
+        self.prev_min = None
+        self.diff = None
+
     def preprocess(
             self,
             X : np.ndarray,
@@ -175,13 +180,23 @@ class ProcessingNormalize:
         if not isinstance(X, np.ndarray):
             X = np.array(X)
         
-        max_ = np.max(X, axis=0)
-        self.prev_max = max_
-        min_ = np.min(X, axis=0) - floor
-        self.prev_min = min_
+        if self.prev_max is None:
+            max_ = np.max(X, axis=0)
+            self.prev_max = max_
+        else:
+            max_ = self.prev_max
+        
+        if self.prev_min is None:
+            min_ = np.min(X, axis=0) - floor
+            self.prev_min = min_
+        else:
+            min_ = self.prev_min
 
-        diff = (max_ - min_) / roof
-        self.prev_diff = diff
+        if self.prev_diff is None:
+            diff = (max_ - min_) / roof
+            self.prev_diff = diff
+        else:
+            diff = self.prev_diff
 
         for column in range(X.shape[1]):
             # Make the column be in [floor, ...)
@@ -205,7 +220,7 @@ class ProcessingNormalize:
             # Make column be in [floor, ...)
             centroids[:, column] *= self.prev_diff[column]
 
-            # Make column be in original [floor, roof]
+            # Make column be in [original floor, original roof]
             centroids[:, column] += self.prev_min[column]
         
         return centroids
